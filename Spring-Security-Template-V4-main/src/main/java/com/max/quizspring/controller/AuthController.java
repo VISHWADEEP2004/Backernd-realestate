@@ -3,11 +3,18 @@ package com.max.quizspring.controller;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.HttpStatus.OK;
 
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,6 +37,12 @@ public class AuthController {
 
     private final AuthService authService;
 
+    @GetMapping("/users")
+    @Operation(summary = "Get all users", description = "Fetches a list of all users.")
+    public ResponseEntity<List<?>> getAllUsers() {
+        return ResponseEntity.ok(authService.getAllUsers());
+    }
+
     @PostMapping("/register")
     @Operation(summary = "Register a new user", description = "Allows users to register by providing necessary registration details.")
     public ResponseEntity<?> register(@Parameter(description = "Registration details of the user") @RequestBody RegisterRequest registerRequest) {
@@ -41,6 +54,7 @@ public class AuthController {
     public ResponseEntity<?> login(@Parameter(description = "Login credentials of the user") @RequestBody LoginRequest loginRequest) {
         return new ResponseEntity<>(authService.login(loginRequest), OK);
     }
+
     @PutMapping("/update")
     @Operation(summary = "Update user information", description = "Allows users to update their information by providing updated details.")
     public ResponseEntity<?> update(@Parameter(description = "Updated details of the user") @RequestBody UpdateRequest updateRequest) {
@@ -48,9 +62,18 @@ public class AuthController {
     }
 
     @DeleteMapping("/delete/{userId}")
-    @Operation(summary = "Delete a user", description = "Allows users to delete their account by providing a user ID.")
-    public ResponseEntity<?> delete(@Parameter(description = "ID of the user to be deleted") @PathVariable Long userId) {
-        authService.deleteUser(userId);
-        return new ResponseEntity<>(NO_CONTENT);
+    public ResponseEntity<?> delete(@PathVariable Long userId) {
+        if (userId == null) {
+            return new ResponseEntity<>("User ID is required", HttpStatus.BAD_REQUEST);
+        }
+        try {
+            System.out.println("Received userId for deletion: " + userId); // Log the ID for debugging
+            authService.deleteUser(userId);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (Exception e) {
+            System.out.println("Error during deletion: " + e.getMessage()); // Log the error
+            return new ResponseEntity<>("Error deleting user", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
+    
 }

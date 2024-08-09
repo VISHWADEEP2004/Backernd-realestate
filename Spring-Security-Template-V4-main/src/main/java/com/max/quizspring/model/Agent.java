@@ -1,6 +1,5 @@
 package com.max.quizspring.model;
 
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,6 +24,4 @@ public class Agent {
     private String email;
     private String phone;
 
-     @OneToMany(mappedBy = "agent", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Property> properties = new ArrayList<>();
 }

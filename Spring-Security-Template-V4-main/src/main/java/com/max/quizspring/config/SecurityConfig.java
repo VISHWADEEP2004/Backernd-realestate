@@ -42,43 +42,48 @@ public class SecurityConfig {
 
         private static final String[] PublicEndPoints = {
                         "/api/auth/**",
+                        "/api/auth/delete/**",
                         "/api/web/sites",
                         "/swagger-ui/**",
                         "/swagger-ui.html/**",
                         "/api/admin/default",
-                        "/v3/api-docs/**"
+                        "/v3/api-docs/**",
+                        "/api/reviews/**",
+                        "/api/properties/**",
+                        "/api/agents/**",
+                        
         };
 
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-                return httpSecurity
-                                .csrf(AbstractHttpConfigurer::disable)
-                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                                .authorizeHttpRequests(
-                                                authorize -> authorize.requestMatchers(PublicEndPoints).permitAll()
-                                                                .anyRequest().authenticated())
-                                .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
-                                .userDetailsService(userDetailsService)
-                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                                .logout(logout -> logout.logoutUrl("/api/auth/logout")
-                                                .addLogoutHandler(logoutHandler)
-                                                .logoutSuccessHandler((request, response,
-                                                                authentication) -> SecurityContextHolder
-                                                                                .clearContext()))
-                                .build();
+            return httpSecurity
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .authorizeHttpRequests(
+                    authorize -> authorize.requestMatchers(PublicEndPoints).permitAll()
+                        .anyRequest().authenticated()) // Ensure proper authorization for other requests
+                .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
+                .userDetailsService(userDetailsService)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .logout(logout -> logout.logoutUrl("/api/auth/logout")
+                    .addLogoutHandler(logoutHandler)
+                    .logoutSuccessHandler((request, response, authentication) -> SecurityContextHolder.clearContext()))
+                .build();
         }
+        
 
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
-                CorsConfiguration corsConfiguration = new CorsConfiguration();
-                // Note : Replace with server url/ip in production
-                corsConfiguration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
-                corsConfiguration.setAllowedHeaders(Arrays.asList(AUTHORIZATION, CONTENT_TYPE));
-                corsConfiguration.setAllowedMethods(Arrays.asList(GET.name(), POST.name(), PUT.name(), PATCH.name(),
-                                DELETE.name(), HEAD.name(), OPTIONS.name()));
-                corsConfiguration.setAllowCredentials(true);
-                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-                source.registerCorsConfiguration("/**", corsConfiguration);
-                return source;
+            CorsConfiguration corsConfiguration = new CorsConfiguration();
+            corsConfiguration.setAllowedOrigins(Arrays.asList("http://localhost:5173")); // Your frontend URL
+            corsConfiguration.setAllowedHeaders(Arrays.asList(AUTHORIZATION, CONTENT_TYPE));
+            corsConfiguration.setAllowedMethods(Arrays.asList(GET.name(), POST.name(), PUT.name(), PATCH.name(),
+                DELETE.name(), HEAD.name(), OPTIONS.name()));
+            corsConfiguration.setAllowCredentials(true);
+            UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+            source.registerCorsConfiguration("/**", corsConfiguration);
+            return source;
         }
+        
+        
 }

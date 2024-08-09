@@ -32,16 +32,15 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long uid;
     private String name;
+    private String username; // Added to align with the frontend
     private String email;
     private String password;
-    private String phone;
-    private String address;
 
     @Enumerated(EnumType.STRING)
     private Role role;
 
     public enum Role {
-        STUDENT, ADMIN, INSTRUCTOR
+        USER, ADMIN, AGENT
     }
 
     @OneToMany(mappedBy = "user")
@@ -54,8 +53,8 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        // NOTE : return username, if you are using username for login instead of email
-        return email;
+        // Return username instead of email for login
+        return username;
     }
 
     @Override

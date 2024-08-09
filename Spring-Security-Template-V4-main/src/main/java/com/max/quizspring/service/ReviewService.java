@@ -1,51 +1,45 @@
 package com.max.quizspring.service;
 
-
-import com.max.quizspring.auth.ReviewRequest;
-import com.max.quizspring.model.Property;
-import com.max.quizspring.model.Review;
-import com.max.quizspring.repo.PropertyRepos;
-import com.max.quizspring.repo.ReviewRepo;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import com.max.quizspring.model.Review;
+import com.max.quizspring.repo.ReviewRepo;
+
+import jakarta.validation.Valid;
+
 @Service
 public class ReviewService {
 
-    @Autowired
-    private ReviewRepo reviewRepository;
+    private final ReviewRepo reviewRepository;
 
-    @Autowired
-    private PropertyRepos propertyRepository;
+    public ReviewService(ReviewRepo reviewRepository) {
+        this.reviewRepository = reviewRepository;
+    }
 
-    public Review createReview(ReviewRequest reviewDto) {
-        Review review = new Review();
-        review.setComment(reviewDto.getComment());
-        review.setRating(reviewDto.getRating());
-        
-        Property property = propertyRepository.findById(reviewDto.getPropertyId())
-                                             .orElseThrow(() -> new RuntimeException("Property not found"));
-        review.setProperty(property);
-        
+    public Review addReview(Review review) {
         return reviewRepository.save(review);
     }
 
-    public Review updateReview(Long id, ReviewRequest reviewDto) {
+    public List<Review> getAllReviews() {
+        return reviewRepository.findAll();
+    }
+
+    public Review getReviewById(Long id) {
+        Optional<Review> review = reviewRepository.findById(id);
+        return review.orElse(null);
+    }
+
+    public Review updateReview(Long id, @Valid Review review) {
         if (reviewRepository.existsById(id)) {
-            Review review = reviewRepository.findById(id).get();
-            review.setComment(reviewDto.getComment());
-            review.setRating(reviewDto.getRating());
-
-            Property property = propertyRepository.findById(reviewDto.getPropertyId())
-                                                 .orElseThrow(() -> new RuntimeException("Property not found"));
-            review.setProperty(property);
-
+            review.setId(id); // Assuming setId method is present in Review model
             return reviewRepository.save(review);
-        } else {
-            return null;
         }
+        return null;
+    }
+
+    public void deleteReview(Long id) {
+        reviewRepository.deleteById(id);
     }
 }
