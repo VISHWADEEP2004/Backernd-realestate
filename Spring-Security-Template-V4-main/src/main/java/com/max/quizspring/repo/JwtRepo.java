@@ -9,4 +9,6 @@ public interface JwtRepo extends JpaRepository<Token, String> {
     List<Token> findAllByUser_UidAndExpiredFalseAndRevokedFalse(Long uid);
 
     Optional<Token> findByToken(String token);
+
+    List<Token> findAllByAgent_IdAndExpiredFalseAndRevokedFalse(Long id);
 }

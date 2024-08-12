@@ -29,61 +29,60 @@ import static org.springframework.http.HttpMethod.PUT;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 import lombok.RequiredArgsConstructor;
-
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-        private final UserDetailsService userDetailsService;
-        private final JwtAuthenticationFilter jwtAuthenticationFilter;
-        private final LogoutHandler logoutHandler;
+    private final UserDetailsService userDetailsService;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final LogoutHandler logoutHandler;
 
-        private static final String[] PublicEndPoints = {
-                        "/api/auth/**",
-                        "/api/auth/delete/**",
-                        "/api/web/sites",
-                        "/swagger-ui/**",
-                        "/swagger-ui.html/**",
-                        "/api/admin/default",
-                        "/v3/api-docs/**",
-                        "/api/reviews/**",
-                        "/api/properties/**",
-                        "/api/agents/**",
-                        
-        };
+    private static final String[] PUBLIC_ENDPOINTS = {
+            "/api/auth/**",
+            "/api/auth/delete/**",
+            "/api/web/sites",
+            "/swagger-ui/**",
+            "/swagger-ui.html/**",
+            "/api/admin/default",
+            "/v3/api-docs/**",
+            "/api/reviews/**",
+            "/api/properties/**",
+            "/api/agents/**",
+            "/api/agents/delete/**",
+    };
 
-        @Bean
-        public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-            return httpSecurity
-                .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .authorizeHttpRequests(
-                    authorize -> authorize.requestMatchers(PublicEndPoints).permitAll()
-                        .anyRequest().authenticated()) // Ensure proper authorization for other requests
-                .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
-                .userDetailsService(userDetailsService)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .logout(logout -> logout.logoutUrl("/api/auth/logout")
-                    .addLogoutHandler(logoutHandler)
-                    .logoutSuccessHandler((request, response, authentication) -> SecurityContextHolder.clearContext()))
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+        return httpSecurity
+                .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for testing
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Apply CORS settings
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll() // Permit public endpoints
+                        .anyRequest().authenticated()) // Require authentication for all other requests
+                .sessionManagement(session -> session.sessionCreationPolicy(STATELESS)) // Stateless sessions
+                .userDetailsService(userDetailsService) // Set user details service
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // Add JWT filter
+                .logout(logout -> logout
+                        .logoutUrl("/api/auth/logout")
+                        .addLogoutHandler(logoutHandler)
+                        .logoutSuccessHandler((request, response, authentication) -> SecurityContextHolder.clearContext())) // Handle logout
                 .build();
-        }
-        
+    }
 
-        @Bean
-        public CorsConfigurationSource corsConfigurationSource() {
-            CorsConfiguration corsConfiguration = new CorsConfiguration();
-            corsConfiguration.setAllowedOrigins(Arrays.asList("http://localhost:5173")); // Your frontend URL
-            corsConfiguration.setAllowedHeaders(Arrays.asList(AUTHORIZATION, CONTENT_TYPE));
-            corsConfiguration.setAllowedMethods(Arrays.asList(GET.name(), POST.name(), PUT.name(), PATCH.name(),
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration corsConfiguration = new CorsConfiguration();
+        corsConfiguration.setAllowedOrigins(Arrays.asList("http://localhost:5173")); // Replace with your frontend URL
+        corsConfiguration.setAllowedHeaders(Arrays.asList(AUTHORIZATION, CONTENT_TYPE));
+        corsConfiguration.setAllowedMethods(Arrays.asList(GET.name(), POST.name(), PUT.name(), PATCH.name(),
                 DELETE.name(), HEAD.name(), OPTIONS.name()));
-            corsConfiguration.setAllowCredentials(true);
-            UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-            source.registerCorsConfiguration("/**", corsConfiguration);
-            return source;
-        }
-        
-        
+        corsConfiguration.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", corsConfiguration);
+        return source;
+    }
 }

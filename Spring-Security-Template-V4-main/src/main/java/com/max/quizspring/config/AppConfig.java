@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.max.quizspring.repo.AgentRepo;
 import com.max.quizspring.repo.UserRepo;
 
 import lombok.RequiredArgsConstructor;
@@ -18,13 +19,14 @@ import lombok.RequiredArgsConstructor;
 public class AppConfig {
 
     private final UserRepo userRepo;
+    private final AgentRepo agentRepo;
 
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> userRepo.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found."));
     }
-
+    
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

@@ -20,6 +20,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
 @Data
 @Builder
 @Entity
@@ -27,12 +28,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Table(name = "qz_user")
 public class User implements UserDetails {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long uid;
     private String name;
-    private String username; // Added to align with the frontend
+    private String username;
     private String email;
     private String password;
 
@@ -53,7 +53,6 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        // Return username instead of email for login
         return username;
     }
 

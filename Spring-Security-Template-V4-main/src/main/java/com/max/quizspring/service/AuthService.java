@@ -34,15 +34,15 @@ public class AuthService {
     private final JwtToken jwtUtil;
 
     public String register(RegisterRequest registerRequest) {
-        Optional<User> userExist = userRepository.findByUsername(registerRequest.getUsername());
+        Optional<User> userExist = userRepository.findByEmail(registerRequest.getEmail());
         if (userExist.isPresent()) {
-            return "User already exists with username " + registerRequest.getUsername();
+            return "User already exists with email id " + registerRequest.getEmail();
         }
         var user = User.builder()
                 .name(registerRequest.getName())
+                .username(registerRequest.getUsername())
                 .email(registerRequest.getEmail())
                 .password(passwordEncoder.encode(registerRequest.getPassword()))
-                .username(registerRequest.getUsername())
                 .role(User.Role.USER)
                 .build();
         userRepository.save(user);
@@ -66,7 +66,7 @@ public class AuthService {
     }
 
     public String createAdmin() {
-        Optional<User> userExist = userRepository.findByUsername("admin");
+        Optional<User> userExist = userRepository.findByEmail("admin@gmail.com");
         if (userExist.isPresent()) {
             return "Admin already exists";
         }
@@ -75,7 +75,6 @@ public class AuthService {
                 .name("Admin")
                 .email("admin@gmail.com")
                 .password(passwordEncoder.encode("Admin@123"))
-                .username("admin")
                 .role(User.Role.ADMIN)
                 .build();
         userRepository.save(user);
@@ -83,39 +82,39 @@ public class AuthService {
     }
 
     public Map<String, Object> login(LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
-        );
+        System.out.println("Attempting to log in with email: " + loginRequest.getEmail());
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
+            );
     
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        String token = jwtUtil.generateToken(userDetails);  // Make sure JWT generation is set up for UserDetails
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String token = jwtUtil.generateToken(userDetails);
     
-        Optional<User> user = userRepository.findByEmail(loginRequest.getEmail());
-        if (user.isEmpty()) {
-            throw new RuntimeException("User not found");
+            Optional<User> user = userRepository.findByEmail(loginRequest.getEmail());
+            if (user.isEmpty()) {
+                System.out.println("User not found: " + loginRequest.getEmail());
+                throw new RuntimeException("User not found");
+            }
+    
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", token);
+            response.put("role", user.get().getRole().name());
+            response.put("username", userDetails.getUsername());
+            response.put("userId", user.get().getUid());
+    
+            return response;
+        } catch (Exception e) {
+            System.err.println("Login failed: " + e.getMessage());
+            throw e;
         }
-    
-        Map<String, Object> response = new HashMap<>();
-        response.put("token", token);
-        response.put("role", user.get().getRole().name());
-    
-        return response;
-    }
-    public void deleteUser(Long userId) {
-        if (userRepository.existsById(userId)) {
-            userRepository.deleteById(userId);
-        } else {
-            throw new RuntimeException("User not found with ID: " + userId);
-        }
     }
     
     
-    public Object updateUser(UpdateRequest updateRequest) {
-        // Implement user update logic here
-        throw new UnsupportedOperationException("Unimplemented method 'updateUser'");
-    }
-
     public List<User> getAllUsers() {
         return userRepository.findAll();
+    }
+    public void deleteUser(Long userId) {
+        userRepository.deleteById(userId);
     }
 }

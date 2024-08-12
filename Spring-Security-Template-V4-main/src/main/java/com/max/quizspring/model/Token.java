@@ -31,14 +31,16 @@ public class Token {
     @Column(unique = true)
     private String token;
 
-
     private boolean revoked;
     private boolean expired;
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_uid")
+    @JoinColumn(name = "user_id", nullable = true)
     private User user;
 
-
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "agent_id", nullable = true)
+    private Agent agent;
 }

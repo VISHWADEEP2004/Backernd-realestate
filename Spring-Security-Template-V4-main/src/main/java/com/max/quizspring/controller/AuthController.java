@@ -6,10 +6,12 @@ import static org.springframework.http.HttpStatus.OK;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.boot.autoconfigure.neo4j.Neo4jProperties.Authentication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -27,6 +29,7 @@ import com.max.quizspring.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -39,7 +42,7 @@ public class AuthController {
 
     @GetMapping("/users")
     @Operation(summary = "Get all users", description = "Fetches a list of all users.")
-    public ResponseEntity<List<?>> getAllUsers() {
+    public ResponseEntity<Object> getAllUsers() {
         return ResponseEntity.ok(authService.getAllUsers());
     }
 
@@ -50,16 +53,21 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    @Operation(summary = "Authenticate user", description = "Allows users to authenticate by providing valid login credentials.")
-    public ResponseEntity<?> login(@Parameter(description = "Login credentials of the user") @RequestBody LoginRequest loginRequest) {
-        return new ResponseEntity<>(authService.login(loginRequest), OK);
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+        return ResponseEntity.ok(authService.login(loginRequest));
     }
 
-    @PutMapping("/update")
-    @Operation(summary = "Update user information", description = "Allows users to update their information by providing updated details.")
-    public ResponseEntity<?> update(@Parameter(description = "Updated details of the user") @RequestBody UpdateRequest updateRequest) {
-        return new ResponseEntity<>(authService.updateUser(updateRequest), OK);
+
+@GetMapping("/me")
+public void getCurrentUser(HttpServletRequest request) {
+    String token = request.getHeader("Authorization");
+    if (token != null) {
+        System.out.println("Token received: " + token);
+    } else {
+        System.out.println("No token received");
     }
+}
+
 
     @DeleteMapping("/delete/{userId}")
     public ResponseEntity<?> delete(@PathVariable Long userId) {
